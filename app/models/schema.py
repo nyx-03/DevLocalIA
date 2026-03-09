@@ -75,6 +75,7 @@ class DocResponse(BaseModel):
 
 
 class TestRequest(BaseModel):
+    __test__ = False
     project_id: int = Field(ge=1)
     target: str = Field(min_length=1, max_length=4000)
     max_chunks: int = Field(default=10, ge=1, le=24)
@@ -90,6 +91,7 @@ class TestRequest(BaseModel):
 
 
 class TestResponse(BaseModel):
+    __test__ = False
     test_code: str
 
 

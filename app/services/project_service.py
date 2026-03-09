@@ -61,7 +61,7 @@ class ProjectService:
         settings = get_settings()
         ignore_dirs = set(settings.ignore_dir_set)
         ignore_dirs.update({".venv", ".direnv"})
-        ignore_patterns = [".env", ".env.*", "*.env"]
+        ignore_patterns = settings.ignore_file_patterns
         return build_tree(
             paths,
             max_depth=max_depth,

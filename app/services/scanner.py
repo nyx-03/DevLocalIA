@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+from fnmatch import fnmatch
 
 from app.core.config import get_settings
 from app.models.schema import FileMeta, ProjectScanResult, SkippedFile
@@ -19,12 +20,17 @@ class ScannerService:
         root_path = os.path.abspath(root_path)
         project_name = os.path.basename(root_path.rstrip(os.sep)) or root_path
         ignore_dirs = self.settings.ignore_dir_set
+        ignore_files = self.settings.ignore_file_patterns
         max_size = self.settings.max_file_size_bytes
 
         files: list[FileMeta] = []
         skipped: list[SkippedFile] = []
 
         for full_path, rel_path in iter_project_files(root_path, ignore_dirs):
+            filename = os.path.basename(rel_path)
+            if any(fnmatch(filename, pattern) for pattern in ignore_files):
+                skipped.append(SkippedFile(path=rel_path, reason="ignored_env"))
+                continue
             try:
                 size = os.path.getsize(full_path)
             except OSError as exc:

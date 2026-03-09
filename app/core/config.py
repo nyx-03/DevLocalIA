@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     model_reasoning: str = "qwen2.5-coder:7b"
     max_file_size: str = "500kb"
     ignore_dirs: str = ".git,node_modules,venv,dist,build,__pycache__"
+    ignore_files: str = ".env,.env.*,*.env"
     db_path: str = "data/devlocal.db"
     chunk_size: int = 1500
     chunk_overlap: int = 200
@@ -25,6 +26,10 @@ class Settings(BaseSettings):
     @property
     def ignore_dir_set(self) -> Set[str]:
         return _split_csv(self.ignore_dirs)
+
+    @property
+    def ignore_file_patterns(self) -> Set[str]:
+        return _split_csv(self.ignore_files)
 
     @property
     def max_file_size_bytes(self) -> int:
