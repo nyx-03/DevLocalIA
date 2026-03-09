@@ -23,6 +23,13 @@ class SearchService:
         candidate = match.group(1)
         return candidate.replace("\\", "/")
 
+    def _sanitize_fts_query(self, query: str) -> str:
+        cleaned = re.sub(r"[^\w]+", " ", query, flags=re.UNICODE).strip()
+        if not cleaned:
+            return ""
+        tokens = cleaned.split()
+        return " ".join(f"\"{token}\"" for token in tokens)
+
     def search(self, project_id: int, query: str, limit: int = 8) -> list[dict]:
         raw_query = query.strip()
         if not raw_query:
@@ -43,13 +50,14 @@ class SearchService:
                     for chunk in chunks
                 ]
 
+        sanitized = self._sanitize_fts_query(raw_query)
+        if not sanitized:
+            return []
+
         try:
-            rows = self.repo.search_chunks(project_id, raw_query, limit)
-        except Exception:
-            sanitized = re.sub(r"[^\\w\\s./-]", " ", raw_query).strip()
-            if not sanitized:
-                return []
             rows = self.repo.search_chunks(project_id, sanitized, limit)
+        except Exception:
+            return []
         return [
             {
                 "rel_path": row["rel_path"],

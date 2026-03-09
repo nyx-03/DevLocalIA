@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from pydantic import BaseModel
+from typing import Literal
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class FileMeta(BaseModel):
@@ -44,9 +46,17 @@ class ChunkHit(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    project_id: int
-    query: str
-    max_chunks: int = 8
+    project_id: int = Field(ge=1)
+    query: str = Field(min_length=1, max_length=4000)
+    max_chunks: int = Field(default=8, ge=1, le=24)
+
+    @field_validator("query")
+    @classmethod
+    def _strip_query(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("query cannot be empty")
+        return cleaned
 
 
 class ChatResponse(BaseModel):
@@ -55,9 +65,9 @@ class ChatResponse(BaseModel):
 
 
 class DocRequest(BaseModel):
-    project_id: int
-    focus: str | None = None
-    max_chunks: int = 12
+    project_id: int = Field(ge=1)
+    focus: str | None = Field(default=None, max_length=2000)
+    max_chunks: int = Field(default=12, ge=1, le=24)
 
 
 class DocResponse(BaseModel):
@@ -65,10 +75,18 @@ class DocResponse(BaseModel):
 
 
 class TestRequest(BaseModel):
-    project_id: int
-    target: str
-    max_chunks: int = 10
-    framework: str = "pytest"
+    project_id: int = Field(ge=1)
+    target: str = Field(min_length=1, max_length=4000)
+    max_chunks: int = Field(default=10, ge=1, le=24)
+    framework: Literal["pytest"] = "pytest"
+
+    @field_validator("target")
+    @classmethod
+    def _strip_target(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("target cannot be empty")
+        return cleaned
 
 
 class TestResponse(BaseModel):
@@ -76,10 +94,18 @@ class TestResponse(BaseModel):
 
 
 class RefactorRequest(BaseModel):
-    project_id: int
-    target: str
-    max_chunks: int = 10
-    style: str = "safe"
+    project_id: int = Field(ge=1)
+    target: str = Field(min_length=1, max_length=4000)
+    max_chunks: int = Field(default=10, ge=1, le=24)
+    style: Literal["safe", "moderate", "aggressive"] = "safe"
+
+    @field_validator("target")
+    @classmethod
+    def _strip_refactor_target(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("target cannot be empty")
+        return cleaned
 
 
 class RefactorResponse(BaseModel):
@@ -87,7 +113,17 @@ class RefactorResponse(BaseModel):
 
 
 class ProjectIndexRequest(BaseModel):
-    root_path: str
+    root_path: str = Field(min_length=1, max_length=500)
+
+    @field_validator("root_path")
+    @classmethod
+    def _strip_root_path(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("root_path cannot be empty")
+        if "\x00" in cleaned:
+            raise ValueError("root_path contains null byte")
+        return cleaned
 
 
 class ProjectIndexResponse(BaseModel):

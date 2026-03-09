@@ -5,6 +5,7 @@ import logging
 from app.llm.llm_service import LLMService
 from app.models.schema import RefactorResponse
 from app.services.search import SearchService
+from app.llm.prompts import refactor_prompt, join_context_blocks
 
 
 class RefactorEngineService:
@@ -29,20 +30,8 @@ class RefactorEngineService:
                 f"{hit['content']}"
             )
 
-        context_text = "\n\n---\n\n".join(context_blocks) if context_blocks else "(aucun contexte trouvé)"
-
-        prompt = (
-            "Tu es un assistant IA local pour développeurs. Analyse le code et propose des refactors.\n"
-            "Contraintes :\n"
-            "- Retourner des suggestions concrètes, priorisées.\n"
-            "- Fournir un patch diff unifié si possible.\n"
-            "- Ne pas exécuter de code.\n"
-            "- Être prudent et justifier les changements.\n\n"
-            f"Cible: {target}\n"
-            f"Style: {style}\n\n"
-            "Contexte code (extraits):\n"
-            f"{context_text}\n"
-        )
+        context_text = join_context_blocks(context_blocks)
+        prompt = refactor_prompt(target, style, context_text)
 
         refactor_text = self.llm.generate(task="refactor_code", prompt=prompt)
         return RefactorResponse(refactor=refactor_text)

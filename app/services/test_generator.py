@@ -5,6 +5,7 @@ import logging
 from app.llm.llm_service import LLMService
 from app.models.schema import TestResponse
 from app.services.search import SearchService
+from app.llm.prompts import test_prompt, join_context_blocks
 
 
 class TestGeneratorService:
@@ -29,21 +30,8 @@ class TestGeneratorService:
                 f"{hit['content']}"
             )
 
-        context_text = "\n\n---\n\n".join(context_blocks) if context_blocks else "(aucun contexte trouvé)"
-
-        prompt = (
-            "Tu es un assistant IA local pour développeurs. Génère des tests unitaires en Python.\n"
-            "Contraintes :\n"
-            "- Utiliser pytest.\n"
-            "- Écrire du vrai code, pas de pseudocode.\n"
-            "- Ajouter des mocks si nécessaire (pytest-mock ou unittest.mock).\n"
-            "- Couvrir les cas normaux et au moins un cas d'erreur.\n"
-            "- Répondre uniquement avec le fichier de tests en code Python.\n\n"
-            f"Cible: {target}\n"
-            f"Framework: {framework}\n\n"
-            "Contexte code (extraits):\n"
-            f"{context_text}\n"
-        )
+        context_text = join_context_blocks(context_blocks)
+        prompt = test_prompt(target, framework, context_text)
 
         test_code = self.llm.generate(task="generate_tests", prompt=prompt)
         return TestResponse(test_code=test_code)

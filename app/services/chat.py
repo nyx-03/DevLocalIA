@@ -7,6 +7,7 @@ from app.models.schema import ChatResponse, ChunkHit
 from app.services.search import SearchService
 from app.services.project_service import ProjectService
 from app.core.config import get_settings
+from app.llm.prompts import chat_prompt, join_context_blocks
 
 
 class ChatService:
@@ -50,16 +51,8 @@ class ChatService:
                 )
             )
 
-        context_text = "\n\n---\n\n".join(context_blocks) if context_blocks else "(aucun contexte trouvé)"
-
-        prompt = (
-            "Tu es un assistant IA local pour développeurs. Réponds en français de manière concise et précise.\n\n"
-            "Question utilisateur:\n"
-            f"{query}\n\n"
-            "Contexte code (extraits) :\n"
-            f"{context_text}\n\n"
-            "Si le contexte est insuffisant, explique ce qui manque et propose où chercher."
-        )
+        context_text = join_context_blocks(context_blocks)
+        prompt = chat_prompt(query, context_text)
 
         answer = self.llm.generate(task="chat", prompt=prompt)
         return ChatResponse(answer=answer, used_chunks=used_chunks)
