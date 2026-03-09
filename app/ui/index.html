@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DevLocal AI</title>
+    <style>
+      :root {
+        --bg: #0a0f1c;
+        --bg-alt: #0f172a;
+        --panel: rgba(16, 23, 38, 0.92);
+        --panel-2: rgba(20, 30, 48, 0.92);
+        --border: rgba(255, 255, 255, 0.08);
+        --text: #e8eef6;
+        --muted: #97a6ba;
+        --accent: #3cf4c9;
+        --accent-2: #7aa2ff;
+        --accent-3: #ffb454;
+        --danger: #ff6b6b;
+        --shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+        --radius: 16px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(1200px 800px at 15% 10%, #13213a 0%, transparent 55%),
+          radial-gradient(900px 700px at 85% 5%, #1a2c4d 0%, transparent 55%),
+          linear-gradient(135deg, #0a0f1c 0%, #0f172a 100%);
+        color: var(--text);
+        font-family: "Space Grotesk", "Sora", "Manrope", sans-serif;
+        min-height: 100vh;
+        padding: 28px;
+      }
+
+      .grid-bg {
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+        background-size: 48px 48px;
+        pointer-events: none;
+        opacity: 0.15;
+      }
+
+      .app {
+        position: relative;
+        z-index: 1;
+        max-width: 1280px;
+        margin: 0 auto;
+        display: grid;
+        gap: 20px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-radius: var(--radius);
+        background: var(--panel);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        color: #081018;
+      }
+
+      .brand h1 {
+        font-size: 22px;
+        margin: 0;
+      }
+
+      .brand p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .status-pill {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(60, 244, 201, 0.12);
+        border: 1px solid rgba(60, 244, 201, 0.3);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 12px rgba(60, 244, 201, 0.8);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 280px 1fr 300px;
+        gap: 20px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .panel-title {
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+
+      label {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 10px 12px;
+        background: rgba(6, 10, 16, 0.6);
+        color: var(--text);
+        font-size: 14px;
+        font-family: "IBM Plex Mono", "JetBrains Mono", "Fira Code", monospace;
+      }
+
+      textarea {
+        min-height: 140px;
+        resize: vertical;
+      }
+
+      .btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-weight: 700;
+        cursor: pointer;
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        color: #081018;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: 0 10px 24px rgba(60, 244, 201, 0.25);
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .btn.secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+        box-shadow: none;
+      }
+
+      .btn.ghost {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+        box-shadow: none;
+      }
+
+      .btn-row {
+        display: grid;
+        gap: 10px;
+      }
+
+      .mode-tabs {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .mode-tabs button {
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text);
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .mode-tabs button.active {
+        background: linear-gradient(120deg, rgba(60, 244, 201, 0.2), rgba(122, 162, 255, 0.2));
+        border-color: rgba(122, 162, 255, 0.5);
+        transform: translateY(-1px);
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .output {
+        white-space: pre-wrap;
+        font-family: "IBM Plex Mono", "JetBrains Mono", "Fira Code", monospace;
+        background: rgba(6, 10, 16, 0.65);
+        border-radius: 14px;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        padding: 14px;
+        min-height: 260px;
+      }
+
+      .output.markdown {
+        white-space: normal;
+        font-family: "Space Grotesk", "Sora", "Manrope", sans-serif;
+        line-height: 1.6;
+      }
+
+      .output.markdown h1,
+      .output.markdown h2,
+      .output.markdown h3,
+      .output.markdown h4 {
+        margin: 16px 0 8px;
+      }
+
+      .output.markdown p {
+        margin: 8px 0;
+        color: var(--text);
+      }
+
+      .output.markdown ul,
+      .output.markdown ol {
+        padding-left: 20px;
+        margin: 8px 0;
+      }
+
+      .output.markdown code {
+        font-family: "IBM Plex Mono", "JetBrains Mono", "Fira Code", monospace;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+
+      .output.markdown pre {
+        background: rgba(6, 10, 16, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 12px;
+        overflow-x: auto;
+      }
+
+      .output.markdown blockquote {
+        border-left: 3px solid var(--accent);
+        padding-left: 12px;
+        color: var(--muted);
+        margin: 8px 0;
+      }
+
+      .output.markdown hr {
+        border: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        margin: 12px 0;
+      }
+
+      .output.markdown a {
+        color: var(--accent-2);
+        text-decoration: none;
+      }
+
+      .output.markdown a:hover {
+        text-decoration: underline;
+      }
+
+      .md-gap {
+        height: 8px;
+      }
+
+      .stat-card {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+      }
+
+      .stat-card h4 {
+        margin: 0 0 4px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      .stat-card p {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .status {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .pulse {
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+
+      .rise {
+        animation: rise 0.6s ease both;
+      }
+
+      @keyframes pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 1; }
+        100% { opacity: 0.6; }
+      }
+
+      @keyframes rise {
+        from { transform: translateY(8px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+
+      @media (max-width: 1080px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .mode-tabs {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grid-bg"></div>
+    <div class="app">
+      <header class="topbar rise">
+        <div class="brand">
+          <div class="brand-badge">DL</div>
+          <div>
+            <h1>DevLocal AI</h1>
+            <p>Studio IA local pour développeurs. Ollama, zéro cloud.</p>
+          </div>
+        </div>
+        <div class="status-pill">
+          <span class="dot"></span>
+          <span id="health">inconnu</span>
+        </div>
+      </header>
+
+      <section class="layout">
+        <aside class="panel rise" style="animation-delay: 0.05s;">
+          <div class="panel-header">
+            <h2 class="panel-title">Projet</h2>
+            <button class="btn ghost" id="healthBtn">Vérifier API</button>
+          </div>
+
+          <div class="field">
+            <label for="projectId">ID du projet</label>
+            <input id="projectId" type="number" value="1" min="1" />
+          </div>
+          <div class="field">
+            <label for="projectPath">Chemin du projet</label>
+            <input id="projectPath" type="text" placeholder="/Users/ludo/mon-projet" />
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="indexBtn">Indexer le projet</button>
+          </div>
+
+          <div class="stack" style="margin-top: 16px;">
+            <div class="stat-card">
+              <h4>Projet</h4>
+              <p id="projectName">-</p>
+            </div>
+            <div class="stat-card">
+              <h4>Fichiers</h4>
+              <p id="fileCount">-</p>
+            </div>
+            <div class="stat-card">
+              <h4>Chunks</h4>
+              <p id="chunkCount">-</p>
+            </div>
+          </div>
+        </aside>
+
+        <main class="panel rise" style="animation-delay: 0.1s;">
+          <div class="panel-header">
+            <h2 class="panel-title">Atelier IA</h2>
+            <span class="status">Mode actif : <span id="mode">chat</span></span>
+          </div>
+
+          <div class="mode-tabs" role="tablist">
+            <button class="active" data-mode="chat">Chat</button>
+            <button data-mode="docs">Docs</button>
+            <button data-mode="tests">Tests</button>
+            <button data-mode="refactor">Refactor</button>
+          </div>
+
+          <div class="field">
+            <label for="query">Question ou cible</label>
+            <textarea id="query" placeholder="explique app/services/indexer.py"></textarea>
+          </div>
+
+          <div class="chips" aria-label="Suggestions rapides">
+            <span class="chip" data-suggest="donne l'arborescence du projet">Arborescence</span>
+            <span class="chip" data-suggest="résume l'architecture du projet">Architecture</span>
+            <span class="chip" data-suggest="explique app/main.py">Entrypoint</span>
+            <span class="chip" data-suggest="où est gérée la configuration ?">Configuration</span>
+          </div>
+
+          <div class="field" style="margin-top: 14px;">
+            <label for="focus">Focus doc (optionnel)</label>
+            <input id="focus" type="text" placeholder="vue d'ensemble de l'architecture" />
+          </div>
+
+          <div class="stack" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+            <div class="field">
+              <label for="maxChunks">Nombre max d'extraits</label>
+              <input id="maxChunks" type="number" value="8" min="1" max="24" />
+            </div>
+            <div class="field">
+              <label for="style">Style de refactor</label>
+              <select id="style">
+                <option value="safe">safe</option>
+                <option value="moderate">moderate</option>
+                <option value="aggressive">aggressive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="btn-row" style="grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 14px;">
+            <button class="btn" id="runBtn">Exécuter</button>
+            <button class="btn secondary" id="clearBtn">Effacer sortie</button>
+          </div>
+
+          <p class="status" id="status" style="margin-top: 10px;">Prêt.</p>
+
+          <div class="output" id="output" style="margin-top: 14px;"></div>
+        </main>
+
+        <aside class="panel rise" style="animation-delay: 0.15s;">
+          <div class="panel-header">
+            <h2 class="panel-title">Console</h2>
+            <button class="btn ghost" id="statsBtn">Recharger stats</button>
+          </div>
+
+          <div class="stack">
+            <div class="stat-card">
+              <h4>Conseil</h4>
+              <p>Indexe d'abord le projet puis pose une question ciblée.</p>
+            </div>
+            <div class="stat-card">
+              <h4>Raccourci</h4>
+              <p>Mode Docs = Markdown rendu automatiquement.</p>
+            </div>
+            <div class="stat-card">
+              <h4>Statut</h4>
+              <p id="activity">Aucune action en cours.</p>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </div>
+
+    <script>
+      const state = {
+        mode: "chat",
+      };
+
+      const outputEl = document.getElementById("output");
+      const statusEl = document.getElementById("status");
+      const healthEl = document.getElementById("health");
+      const modeEl = document.getElementById("mode");
+      const projectNameEl = document.getElementById("projectName");
+      const fileCountEl = document.getElementById("fileCount");
+      const chunkCountEl = document.getElementById("chunkCount");
+      const activityEl = document.getElementById("activity");
+
+      document.querySelectorAll(".mode-tabs button").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".mode-tabs button").forEach((t) => t.classList.remove("active"));
+          tab.classList.add("active");
+          state.mode = tab.dataset.mode;
+          modeEl.textContent = state.mode;
+        });
+      });
+
+      document.querySelectorAll(".chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const suggestion = chip.dataset.suggest;
+          if (suggestion) {
+            document.getElementById("query").value = suggestion;
+          }
+        });
+      });
+
+      function escapeHtml(value) {
+        return value
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function renderMarkdown(markdown) {
+        if (!markdown) return "";
+
+        const codeBlocks = [];
+        let text = markdown.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+          const index = codeBlocks.length;
+          codeBlocks.push({ lang: lang || "", code });
+          return `@@CODE${index}@@`;
+        });
+
+        text = escapeHtml(text);
+
+        const lines = text.split(/\r?\n/);
+        let html = "";
+        let inUl = false;
+        let inOl = false;
+
+        const closeLists = () => {
+          if (inUl) {
+            html += "</ul>";
+            inUl = false;
+          }
+          if (inOl) {
+            html += "</ol>";
+            inOl = false;
+          }
+        };
+
+        const formatInline = (line) => {
+          let out = line;
+          out = out.replace(/`([^`]+)`/g, "<code>$1</code>");
+          out = out.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+          out = out.replace(/\*(.+?)\*/g, "<em>$1</em>");
+          out = out.replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+          return out;
+        };
+
+        for (const line of lines) {
+          if (/^######\s+/.test(line)) {
+            closeLists();
+            html += `<h6>${formatInline(line.replace(/^######\s+/, ""))}</h6>`;
+            continue;
+          }
+          if (/^#####\s+/.test(line)) {
+            closeLists();
+            html += `<h5>${formatInline(line.replace(/^#####\s+/, ""))}</h5>`;
+            continue;
+          }
+          if (/^####\s+/.test(line)) {
+            closeLists();
+            html += `<h4>${formatInline(line.replace(/^####\s+/, ""))}</h4>`;
+            continue;
+          }
+          if (/^###\s+/.test(line)) {
+            closeLists();
+            html += `<h3>${formatInline(line.replace(/^###\s+/, ""))}</h3>`;
+            continue;
+          }
+          if (/^##\s+/.test(line)) {
+            closeLists();
+            html += `<h2>${formatInline(line.replace(/^##\s+/, ""))}</h2>`;
+            continue;
+          }
+          if (/^#\s+/.test(line)) {
+            closeLists();
+            html += `<h1>${formatInline(line.replace(/^#\s+/, ""))}</h1>`;
+            continue;
+          }
+          if (/^>\s+/.test(line)) {
+            closeLists();
+            html += `<blockquote>${formatInline(line.replace(/^>\s+/, ""))}</blockquote>`;
+            continue;
+          }
+          if (/^---\s*$/.test(line)) {
+            closeLists();
+            html += "<hr />";
+            continue;
+          }
+          if (/^\s*\d+\.\s+/.test(line)) {
+            if (!inOl) {
+              closeLists();
+              html += "<ol>";
+              inOl = true;
+            }
+            html += `<li>${formatInline(line.replace(/^\s*\d+\.\s+/, ""))}</li>`;
+            continue;
+          }
+          if (/^\s*[-*+]\s+/.test(line)) {
+            if (!inUl) {
+              closeLists();
+              html += "<ul>";
+              inUl = true;
+            }
+            html += `<li>${formatInline(line.replace(/^\s*[-*+]\s+/, ""))}</li>`;
+            continue;
+          }
+          if (line.trim() === "") {
+            closeLists();
+            html += '<div class="md-gap"></div>';
+            continue;
+          }
+          closeLists();
+          html += `<p>${formatInline(line)}</p>`;
+        }
+
+        closeLists();
+
+        html = html.replace(/@@CODE(\d+)@@/g, (match, index) => {
+          const block = codeBlocks[Number(index)];
+          if (!block) return "";
+          const code = escapeHtml(block.code);
+          const langAttr = block.lang ? ` data-lang="${block.lang}"` : "";
+          return `<pre><code${langAttr}>${code}</code></pre>`;
+        });
+
+        return html;
+      }
+
+      async function callApi(path, payload) {
+        const response = await fetch(path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || `HTTP ${response.status}`);
+        }
+        return response.json();
+      }
+
+      async function refreshStats() {
+        const projectId = parseInt(document.getElementById("projectId").value, 10);
+        if (!projectId || Number.isNaN(projectId)) return;
+        try {
+          const response = await fetch(`/projects/${projectId}/stats`);
+          if (!response.ok) return;
+          const data = await response.json();
+          projectNameEl.textContent = data.project_name || "-";
+          fileCountEl.textContent = data.file_count ?? "-";
+          chunkCountEl.textContent = data.chunk_count ?? "-";
+        } catch (err) {
+          // noop
+        }
+      }
+
+      document.getElementById("healthBtn").addEventListener("click", async () => {
+        statusEl.textContent = "Vérification de l'API...";
+        statusEl.classList.add("pulse");
+        activityEl.textContent = "Ping de l'API.";
+        try {
+          const response = await fetch("/health");
+          const data = await response.json();
+          healthEl.textContent = data.status || "ok";
+          statusEl.textContent = "API accessible.";
+        } catch (err) {
+          healthEl.textContent = "indisponible";
+          statusEl.textContent = `Erreur API : ${err.message}`;
+        } finally {
+          statusEl.classList.remove("pulse");
+        }
+      });
+
+      document.getElementById("indexBtn").addEventListener("click", async () => {
+        const projectPath = document.getElementById("projectPath").value.trim();
+        if (!projectPath) {
+          outputEl.textContent = "Chemin du projet requis.";
+          return;
+        }
+
+        statusEl.textContent = "Indexation en cours...";
+        statusEl.classList.add("pulse");
+        activityEl.textContent = "Indexation en cours.";
+        outputEl.textContent = "";
+        outputEl.classList.remove("markdown");
+
+        try {
+          const result = await callApi("/projects/index", { root_path: projectPath });
+          document.getElementById("projectId").value = result.project_id;
+          projectNameEl.textContent = result.project_name || "-";
+          fileCountEl.textContent = result.file_count ?? "-";
+          chunkCountEl.textContent = result.chunk_count ?? "-";
+          outputEl.textContent =
+            `Indexation terminée.\n` +
+            `Projet: ${result.project_name}\n` +
+            `Chemin: ${result.root_path}\n` +
+            `Fichiers: ${result.file_count}\n` +
+            `Chunks: ${result.chunk_count}\n` +
+            `Ignorés: ${result.skipped_count}`;
+          statusEl.textContent = "Indexation terminée.";
+          activityEl.textContent = "Indexation terminée.";
+        } catch (err) {
+          outputEl.textContent = `Erreur : ${err.message}`;
+          statusEl.textContent = "Échec.";
+          activityEl.textContent = "Erreur d'indexation.";
+        } finally {
+          statusEl.classList.remove("pulse");
+        }
+      });
+
+      document.getElementById("runBtn").addEventListener("click", async () => {
+        const projectId = parseInt(document.getElementById("projectId").value, 10);
+        const query = document.getElementById("query").value.trim();
+        const focus = document.getElementById("focus").value.trim();
+        const maxChunks = parseInt(document.getElementById("maxChunks").value, 10);
+        const style = document.getElementById("style").value;
+
+        if (!projectId || Number.isNaN(projectId)) {
+          outputEl.textContent = "ID de projet requis.";
+          return;
+        }
+        if (state.mode !== "docs" && !query) {
+          outputEl.textContent = "Question ou cible requise pour ce mode.";
+          return;
+        }
+
+        statusEl.textContent = `Exécution ${state.mode}...`;
+        statusEl.classList.add("pulse");
+        activityEl.textContent = `Exécution ${state.mode}.`;
+        outputEl.textContent = "";
+        outputEl.classList.remove("markdown");
+
+        try {
+          let result;
+          if (state.mode === "chat") {
+            result = await callApi("/chat", { project_id: projectId, query, max_chunks: maxChunks });
+            outputEl.classList.add("markdown");
+            outputEl.innerHTML = renderMarkdown(result.answer || "");
+          } else if (state.mode === "docs") {
+            result = await callApi("/docs/generate", { project_id: projectId, focus: focus || null, max_chunks: maxChunks });
+            outputEl.classList.add("markdown");
+            outputEl.innerHTML = renderMarkdown(result.markdown || "");
+          } else if (state.mode === "tests") {
+            result = await callApi("/tests/generate", { project_id: projectId, target: query, max_chunks: maxChunks, framework: "pytest" });
+            outputEl.textContent = result.test_code || "";
+          } else if (state.mode === "refactor") {
+            result = await callApi("/refactor/suggest", { project_id: projectId, target: query, max_chunks: maxChunks, style });
+            outputEl.textContent = result.refactor || "";
+          }
+          statusEl.textContent = "Terminé.";
+          activityEl.textContent = "Terminé.";
+        } catch (err) {
+          outputEl.textContent = `Erreur : ${err.message}`;
+          statusEl.textContent = "Échec.";
+          activityEl.textContent = "Erreur lors de l'exécution.";
+        } finally {
+          statusEl.classList.remove("pulse");
+        }
+      });
+
+      document.getElementById("clearBtn").addEventListener("click", () => {
+        outputEl.textContent = "";
+        outputEl.classList.remove("markdown");
+        activityEl.textContent = "Sortie effacée.";
+      });
+
+      document.getElementById("statsBtn").addEventListener("click", async () => {
+        activityEl.textContent = "Rechargement des stats.";
+        await refreshStats();
+        activityEl.textContent = "Stats mises à jour.";
+      });
+    </script>
+  </body>
+</html>
